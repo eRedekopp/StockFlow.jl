@@ -5,45 +5,78 @@ using StatsBase
 
 export display_uwd, GraphF, GraphRB, GraphCL, Graph
 
-display_uwd(ex) = to_graphviz(ex, box_labels=:name, junction_labels=:variable, edge_attrs=Dict(:len=>"1"))
+display_uwd(ex) = to_graphviz(
+    ex,
+    box_labels=:name,
+    junction_labels=:variable,
+    edge_attrs=Dict(:len=>"1")
+)
 
-def_stock(p, s) = ("s$s", Attributes(:label=>"$(sname(p, s))",
-                                     :shape=>"square",
-                                     :color=>"black",
-                                     :style=>"filled",
-                                     :fillcolor=>"#9ACEEB"))
+def_stock(p, s) = (
+    "s$s",
+    Attributes(
+        :label=>"$(sname(p, s))",
+        :shape=>"square",
+        :color=>"black"
+    )
+)
 
-def_parameter(p, pp) = ("p$pp", Attributes(:label=>"$(pname(p, pp))",
-                                     :shape=>"circle",
-                                     :color=>"black"))
+def_parameter(p, pp) = (
+    "p$pp",
+    Attributes(
+        :label=>"$(pname(p, pp))",
+        :shape=>"circle",
+        :color=>"black"
+    )
+)
 
-def_auxiliaryV(p, v) = ("v$v", Attributes(:label=>"$(vname(p, v))",
-                                          :shape=>"plaintext",
-                                          :fontcolor=>"black"))
+def_auxiliaryV(p, v) = (
+    "v$v",
+    Attributes(
+        :label=>"$(vname(p, v))",
+        :shape=>"plaintext",
+        :fontcolor=>"black"
+    )
+)
 
-#def_auxiliaryVF(p, v) = ("v$v", Attributes(:label=>"$(vname(p, v))"*"="*"$(make_v_expr(p,v))",
-#                                          :shape=>"plaintext",
-#                                          :fontcolor=>"black"))
+def_auxiliaryVF(p, v) = (
+    "v$v",
+    Attributes(
+        :label=>(
+            p isa AbstractStockAndFlowF ? "$(make_v_expr(p,v))" : "$(vname(p, v))"
+        ),
+        :shape=>"plaintext",
+        :fontcolor=>"black"
+    )
+)
 
-def_auxiliaryVF(p, v) = ("v$v", Attributes(:label=>p isa AbstractStockAndFlowF ? "$(make_v_expr(p,v))" : "$(vname(p, v))",
-                                          :shape=>"plaintext",
-                                          :fontcolor=>"black"))
-
-def_sumV(p, sv) = ("sv$sv", Attributes(:label=>"$(svname(p, sv))",
-                                       :shape=>"circle",
-                                       :color=>"black",
-                                       :fillcolor=>"cornflowerblue",
-                                       :style=>"filled"))
+def_sumV(p, sv) = (
+    "sv$sv",
+    Attributes(
+        :label=>"$(svname(p, sv))",
+        :shape=>"circle",
+        :color=>"black",
+        :fillcolor=>"cornflowerblue",
+        :style=>"filled"
+    )
+)
 
 # currently, we use invisible fake stock nodes as outer clouds
 # type: string of "u" or "d"
 #       "u" indicates this cloud node is an upstream cloud to a half-edge inflow
 #       "d" indicates this cloud node is a downstream cloud to a half-edge outflow
-def_cloud(c, type) = ("fs_$c"*type, Attributes(:label=>"",
-                                               :shape=>"point",
-                                               :color=>"white"))
+def_cloud(c, type) = (
+    "fs_$c"*type,
+    Attributes(
+        :label=>"",
+        :shape=>"point",
+        :color=>"white"
+    )
+)
 
-# function of define the flow with auxiliary variables are also output, e.g., type = "SFVL" or "SFV"
+# function of define the flow with auxiliary variables are also output, e.g.,
+# type = "SFVL" or "SFV"
+#
 # us: string of up stream stock name (including clouds) of the flow
 # ds: string of down stream stock nme (including clouds) of the flow
 # v: the index of the auxiliary variable of the flow
@@ -53,33 +86,82 @@ def_flow_V(p, us, ds, v, f) = begin
     color = "black:invis:black"
     arrowhead = "none"
     splines = "ortho"
-    return ([us, "v$v"],Attributes(:label=>"", :labelfontsize=>labelfontsize, :color=>color, :arrowhead=>arrowhead, :splines=>splines)),
-           (["v$v", ds],Attributes(:label=>"$(fname(p,f))", :labelfontsize=>labelfontsize, :color=>color, :splines=>splines))
+    return (
+        (
+            [us, "v$v"],
+            Attributes(
+                :label=>"",
+                :labelfontsize=>labelfontsize,
+                :color=>color,
+                :arrowhead=>arrowhead,
+                :splines=>splines
+            )
+        ),
+        (
+            ["v$v", ds],
+            Attributes(
+                :label=>"$(fname(p,f))",
+                :labelfontsize=>labelfontsize,
+                :color=>color,
+                :splines=>splines
+            )
+        )
+    )
 end
 
 # function of define the flow without auxiliary variables, e.g., type = "SF"
-def_flow_noneV(p, us, ds, f) = ([us, ds],Attributes(:label=>"$(fname(p,f))", :labelfontsize=>"6", :color=>"black:invis:black"))
+def_flow_noneV(p, us, ds, f) = (
+    [us, ds],
+    Attributes(
+        :label=>"$(fname(p,f))",
+        :labelfontsize=>"6",
+        :color=>"black:invis:black"
+    )
+)
 
 # s: string of the source name
 # t: string of the target name
 def_link(s,t) = ([s, t])
+
+
+
+
+cl_node_attrs(c, n) = Attributes(
+    :label=>"$(vname(c, n))",
+    :shape=>"plaintext"
+)
+cl_edge_attrs() = Attributes(
+    :color=>"blue"
+)
+cl_edge_pol_attrs(pol) = Attributes(
+    cl_edge_attrs(),
+    :label=>"$(pol)"
+)
+cl_graph_attrs() = Attributes(
+    :rankdir=>"LR"
+)
 
 """
 Graph a Causal Loop diagram (no polarities).
 """
 function GraphCL(c::CausalLoop)
 
-  NNodes = [Node("n$n", Attributes(:label=>"$(vname(c, n))",:shape=>"plaintext")) for n in 1:nvert(c)]
+    nodes = [Node("n$n", cl_node_attrs(c, n)) for n in 1:nvert(c)]
 
-  Edges=map(1:nedges(c)) do k
-    [Edge(["n$(sedge(c,k))", "n$(tedge(c,k))"],Attributes(:color=>"blue"))]
-  end |> flatten |> collect
+    edges = map(1:nedges(c)) do k
+        [Edge(
+            ["n$(sedge(c,k))", "n$(tedge(c,k))"],
+            cl_edge_attrs()
+        )]
+    end |> flatten |> collect
 
-  stmts=vcat(NNodes,Edges)
+    stmts = vcat(nodes, edges)
 
-  g = Digraph("G", stmts;graph_attrs=Attributes(:rankdir=>"LR"))
-  return g
-
+    return Digraph(
+        "G",
+        stmts;
+        graph_attrs=cl_graph_attrs()
+    )
 end
 
 """
@@ -94,31 +176,37 @@ Graph a CausalLoopPol.
 """
 function GraphCL(c::CausalLoopPol; schema="BASE")
 
-  NNodes = [Node("n$n", Attributes(:label=>"$(vname(c, n))",:shape=>"plaintext")) for n in 1:nvert(c)]
+    nodes = [Node("n$n", cl_node_attrs(c, n)) for n in 1:nvert(c)]
 
-  if occursin("BASE", schema)
-    Edges=map(1:nedges(c)) do k
-      pol_int = epol(c,k)
-      if pol_int == POL_POSITIVE
-        pol = :+
-      elseif pol_int == POL_NEGATIVE
-        pol = :-
-      else
-        error("Unknown Polarity $pol_int.")
-      end
-      [Edge(["n$(sedge(c,k))", "n$(tedge(c,k))"],Attributes(:color=>"blue",:label=>"$(pol)"))]
-    end |> flatten |> collect
-  elseif schema == "C0"
-    Edges=map(1:nedges(c)) do k
-      [Edge(["n$(sedge(c,k))", "n$(tedge(c,k))"],Attributes(:color=>"blue"))]
-    end |> flatten |> collect
-  end
+    if occursin("BASE", schema)
+        edges = map(1:nedges(c)) do k
+            pol_int = epol(c, k)
+            if pol_int == POL_POSITIVE
+                pol = :+
+            elseif pol_int == POL_NEGATIVE
+                pol = :-
+            else
+                error("Unknown Polarity $pol_int.")
+            end
+            [
+                Edge(
+                    ["n$(sedge(c,k))", "n$(tedge(c,k))"],
+                    cl_edge_pol_attrs(pol)
+                )
+            ]
+        end |> flatten |> collect
+    elseif schema == "C0"
+        # No polarities
+        return GraphCL(convert(StockFlow, c))
+    end
 
-  stmts=vcat(NNodes,Edges)
+    stmts = vcat(nodes, edges)
 
-  g = Digraph("G", stmts;graph_attrs=Attributes(:rankdir=>"LR"))
-  return g
-
+    return Digraph(
+        "G",
+        stmts;
+        graph_attrs=cl_graph_attrs()
+    )
 end
 
 # schema: "c":  the full schema
