@@ -17,7 +17,8 @@ def_stock(p, s) = (
     Attributes(
         :label=>"$(sname(p, s))",
         :shape=>"square",
-        :color=>"black"
+        :color=>"black",
+        :fontcolor=>"black"
     )
 )
 
@@ -25,8 +26,9 @@ def_parameter(p, pp) = (
     "p$pp",
     Attributes(
         :label=>"$(pname(p, pp))",
-        :shape=>"circle",
-        :color=>"black"
+        :shape=>"plaintext",
+        :fontcolor=>"black",
+        :width=>"0"
     )
 )
 
@@ -35,7 +37,8 @@ def_auxiliaryV(p, v) = (
     Attributes(
         :label=>"$(vname(p, v))",
         :shape=>"plaintext",
-        :fontcolor=>"black"
+        :fontcolor=>"black",
+        :width=>"0"
     )
 )
 
@@ -54,10 +57,9 @@ def_sumV(p, sv) = (
     "sv$sv",
     Attributes(
         :label=>"$(svname(p, sv))",
-        :shape=>"circle",
-        :color=>"black",
-        :fillcolor=>"cornflowerblue",
-        :style=>"filled"
+        :shape=>"plaintext",
+        :fontcolor=>"black",
+        :width=>"0"
     )
 )
 
@@ -82,28 +84,25 @@ def_cloud(c, type) = (
 # v: the index of the auxiliary variable of the flow
 # fname: the index of the flow
 def_flow_V(p, us, ds, v, f) = begin
-    labelfontsize = "6"
-    color = "black:invis:black"
-    arrowhead = "none"
-    splines = "ortho"
+    attrs = Attributes(
+        :labelfontsize=>"6",
+        :color=>"black:invis:black",
+        :arrowsize=>"1.5"
+    )
     return (
         (
             [us, "v$v"],
             Attributes(
+                attrs...,
                 :label=>"",
-                :labelfontsize=>labelfontsize,
-                :color=>color,
-                :arrowhead=>arrowhead,
-                :splines=>splines
+                :arrowhead=>"none"
             )
         ),
         (
             ["v$v", ds],
             Attributes(
-                :label=>"$(fname(p,f))",
-                :labelfontsize=>labelfontsize,
-                :color=>color,
-                :splines=>splines
+                attrs...,
+                :label=>"$(fname(p,f))"
             )
         )
     )
@@ -121,7 +120,12 @@ def_flow_noneV(p, us, ds, f) = (
 
 # s: string of the source name
 # t: string of the target name
-def_link(s,t) = ([s, t])
+def_link(s,t) = (
+    [s, t],
+    Attributes(
+        :color=>"blue"
+    )
+)
 
 
 
