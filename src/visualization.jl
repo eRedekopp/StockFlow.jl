@@ -70,9 +70,11 @@ def_sumV(p, sv) = (
 def_cloud(c, type) = (
     "fs_$c"*type,
     Attributes(
-        :label=>"",
-        :shape=>"point",
-        :color=>"white"
+        :label=>"☁",
+        :shape=>"plaintext",
+        :fontsize=>"50",
+        :margin=>"0",
+        :fontcolor=>"gray"
     )
 )
 
@@ -138,7 +140,7 @@ cl_edge_attrs() = Attributes(
     :color=>"blue"
 )
 cl_edge_pol_attrs(pol) = Attributes(
-    cl_edge_attrs(),
+    cl_edge_attrs()...,
     :label=>"$(pol)"
 )
 cl_graph_attrs() = Attributes(
